@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .light-glass-box {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-2xl;
+  }
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 m-0 p-0 antialiased overflow-x-hidden;
+}
+
+@import "tailwindcss";
+
+@theme {
+  --color-alabaster: #F9F6F0;
+  --color-sage: #B4C4B5;
+  --color-rose: #D9A0A0;
+  --color-petrol: #005F73; /* Petrol Blue */
+}
+
+/* Base Typography Constraints */
+h1, h2, h3, h4, h5, h6 {
+  @apply text-petrol font-serif;
+}
+
+body {
+  @apply bg-alabaster text-slate-800 antialiased overflow-hidden;
+}
+
+/* Master Glass Box Utility - Sourced from Master CSS */
+.light-glass-box {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+}
