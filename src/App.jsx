@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Calendar, MapPin } from 'lucide-react';
-import Reveal from './components/Reveal';
+// 1. Change the import to Layout
+import Layout from './components/Layout'; 
 
 export default function App() {
   return (
-    <Reveal>
+    // 2. Wrap your content in Layout
+    <Layout>
       <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-left w-full">
         
         {/* Left Column: Typography & Details */}
@@ -48,6 +50,6 @@ export default function App() {
         </div>
         
       </div>
-    </Reveal>
+    </Layout>
   );
 }
