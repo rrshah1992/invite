@@ -69,7 +69,7 @@ const fsSource = `
   }
 `;
 
-export default function LiquidButton({ imageSrc, children, onClick }) {
+export default function LiquidButton({ imageSrc, children, onClick, className, contentClassName }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -161,19 +161,20 @@ export default function LiquidButton({ imageSrc, children, onClick }) {
   }, [imageSrc]);
 
   return (
-    <button
+    <div
       ref={containerRef}
       onClick={onClick}
-      className="relative overflow-hidden border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] px-12 py-4 rounded-full group transition-transform hover:scale-105 active:scale-95"
+      // If a custom class is passed, use it. Otherwise, fallback to the pill-button style.
+      className={className || "relative overflow-hidden border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] px-12 py-4 rounded-full group transition-transform hover:scale-105 active:scale-95 cursor-pointer inline-block"}
     >
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
       />
       
-      <span className="relative z-50 text-white tracking-[0.2em] text-base font-medium whitespace-nowrap drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+      <div className={contentClassName || "relative z-50 text-white tracking-[0.2em] text-base font-medium whitespace-nowrap drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] flex items-center justify-center"}>
         {children}
-      </span>
-    </button>
+      </div>
+    </div>
   );
 }
