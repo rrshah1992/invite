@@ -2,18 +2,17 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import CanvasReveal from './CanvasReveal';
 import SvgArchway from './SvgArchway';
+import LiquidButton from './LiquidButton'; // 1. Import the new button
 import coverImageDesktop from '../assets/images/coverimage-desktop.png';
-import coverImageMobile from '../assets/images/coverimage-mobile.png';
+import coverImageMobile from '../assets/images/coverimage-mobile_woframe.png';
 
 export default function Layout({ children }) {
   const [revealData, setRevealData] = useState({ isRevealed: false, x: 0, y: 0 });
 
-  // Detect if mobile on load
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' && window.innerWidth < 768
   );
 
-  // Listen for window resizing
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -33,7 +32,7 @@ export default function Layout({ children }) {
       onClick={handleReveal}
     >
       
-      {/* 1. Main Content Payload (z-10) */}
+      {/* 1. Main Content Payload */}
       <main className="absolute inset-0 z-10 w-full h-full flex flex-col items-center justify-center p-6 pointer-events-none">
         <SvgArchway />
         <motion.div 
@@ -50,7 +49,7 @@ export default function Layout({ children }) {
         </motion.div>
       </main>
 
-      {/* 2. The Image Gate (z-30) - Fades and blurs away */}
+      {/* 2. The Static Background Image (Restored) */}
       <AnimatePresence>
         {!revealData.isRevealed && (
           <motion.img 
@@ -67,7 +66,7 @@ export default function Layout({ children }) {
         )}
       </AnimatePresence>
 
-      {/* 3. The Canvas Layer (z-40) - Sandwiched safely in the middle! */}
+      {/* 3. The Canvas Reveal Layer */}
       <div className="absolute inset-0 z-40 pointer-events-none">
         <CanvasReveal 
           triggerWave={revealData.isRevealed} 
@@ -76,22 +75,22 @@ export default function Layout({ children }) {
         />
       </div>
 
-      {/* 4. The Liquid Glass Button (z-50) - Now on the very top */}
+      {/* 4. The Liquid Glass Button */}
       <AnimatePresence>
         {!revealData.isRevealed && (
           <motion.div 
             key="reveal-button"
-            // We can even give the button a slightly faster snap-fade for a crisper feel
             exit={{ 
               opacity: 0, 
               scale: 0.9,
               transition: { duration: 0.8, ease: "easeOut" } 
             }}
-            className="absolute top-[66%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+            // Added pointer-events-auto so the button hover state captures the mouse
+            className="absolute top-[79%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto"
           >
-            <div className="bg-white/10 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] px-12 py-4 rounded-full text-white/90 tracking-[0.2em] text-base font-medium whitespace-nowrap">
-              Click to Reveal
-            </div>
+            <LiquidButton imageSrc={activeImage} onClick={handleReveal}>
+              Tap to join us!
+            </LiquidButton>
           </motion.div>
         )}
       </AnimatePresence>
