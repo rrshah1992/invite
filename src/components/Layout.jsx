@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import CanvasReveal from './CanvasReveal';
-import LiquidButton from './LiquidButton'; // 1. Import the new button
+import LiquidButton from './LiquidButton'; 
 import coverImageDesktop from '../assets/images/coverimage-desktop.png';
 import coverImageMobile from '../assets/images/coverimage-mobile_withframe.png';
 
@@ -27,12 +27,13 @@ export default function Layout({ children }) {
 
   return (
     <div 
-      className="fixed inset-0 w-full h-full overflow-hidden overscroll-none bg-alabaster cursor-pointer"
+      // FIX: If revealed, let the document flow naturally so the window scrolls. If not, lock it.
+      className={`w-full min-h-screen bg-alabaster ${!revealData.isRevealed ? 'fixed inset-0 overflow-hidden overscroll-none cursor-pointer' : ''}`}
       onClick={handleReveal}
     >
       
       {/* 1. Main Content Payload */}
-      <main className={`absolute inset-0 z-10 w-full h-full pointer-events-none ${revealData.isRevealed ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden flex items-center justify-center'}`}>
+      <main className={`relative z-10 w-full ${!revealData.isRevealed ? 'h-screen pointer-events-none overflow-hidden flex items-center justify-center' : ''}`}>
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           animate={{ 
@@ -40,14 +41,13 @@ export default function Layout({ children }) {
             y: revealData.isRevealed ? 0 : 40
           }}
           transition={{ delay: 0.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          // Removed light-glass-box, max-w-4xl, and p-8. Made it full width.
-          className="w-full min-h-full pointer-events-auto flex flex-col"
+          className="w-full min-h-screen pointer-events-auto flex flex-col"
         >
           {children}
         </motion.div>
       </main>
 
-      {/* 2. The Static Background Image (Restored) */}
+      {/* 2. The Static Background Image */}
       <AnimatePresence>
         {!revealData.isRevealed && (
           <motion.img 
@@ -59,13 +59,13 @@ export default function Layout({ children }) {
               filter: "blur(20px)",
               transition: { duration: 1.5, ease: "easeInOut" } 
             }}
-            className="absolute inset-0 w-full h-full object-cover z-30 pointer-events-none"
+            className="fixed inset-0 w-full h-full object-cover z-30 pointer-events-none"
           />
         )}
       </AnimatePresence>
 
       {/* 3. The Canvas Reveal Layer */}
-      <div className="absolute inset-0 z-40 pointer-events-none">
+      <div className="fixed inset-0 z-40 pointer-events-none">
         <CanvasReveal 
           triggerWave={revealData.isRevealed} 
           clickPos={{ x: revealData.x, y: revealData.y }} 
@@ -83,8 +83,7 @@ export default function Layout({ children }) {
               scale: 0.9,
               transition: { duration: 0.8, ease: "easeOut" } 
             }}
-            // Added pointer-events-auto so the button hover state captures the mouse
-            className="absolute top-[79%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto"
+            className="fixed top-[79%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto"
           >
             <LiquidButton imageSrc={activeImage} onClick={handleReveal}>
               Tap to join us!
