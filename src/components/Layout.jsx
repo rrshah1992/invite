@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import CanvasReveal from './CanvasReveal';
 import LiquidButton from './LiquidButton'; // 1. Import the new button
 import coverImageDesktop from '../assets/images/coverimage-desktop.png';
-import coverImageMobile from '../assets/images/coverimage-mobile_woframe.png';
+import coverImageMobile from '../assets/images/coverimage-mobile_withframe.png';
 
 export default function Layout({ children }) {
   const [revealData, setRevealData] = useState({ isRevealed: false, x: 0, y: 0 });
