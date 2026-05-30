@@ -11,6 +11,8 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        // Add the cursive font here
+        cursive: ['"Great Vibes"', 'cursive'],
       },
     },
   },

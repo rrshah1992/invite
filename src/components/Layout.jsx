@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import CanvasReveal from './CanvasReveal';
-import SvgArchway from './SvgArchway';
 import LiquidButton from './LiquidButton'; // 1. Import the new button
 import coverImageDesktop from '../assets/images/coverimage-desktop.png';
 import coverImageMobile from '../assets/images/coverimage-mobile_woframe.png';
@@ -33,17 +32,16 @@ export default function Layout({ children }) {
     >
       
       {/* 1. Main Content Payload */}
-      <main className="absolute inset-0 z-10 w-full h-full flex flex-col items-center justify-center p-6 pointer-events-none">
-        <SvgArchway />
+      <main className={`absolute inset-0 z-10 w-full h-full pointer-events-none ${revealData.isRevealed ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden flex items-center justify-center'}`}>
         <motion.div 
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ 
             opacity: revealData.isRevealed ? 1 : 0, 
-            y: revealData.isRevealed ? 0 : 40,
-            scale: revealData.isRevealed ? 1 : 0.95
+            y: revealData.isRevealed ? 0 : 40
           }}
           transition={{ delay: 0.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="light-glass-box p-8 md:p-12 max-w-4xl w-full text-center z-20 relative pointer-events-auto"
+          // Removed light-glass-box, max-w-4xl, and p-8. Made it full width.
+          className="w-full min-h-full pointer-events-auto flex flex-col"
         >
           {children}
         </motion.div>

@@ -5,9 +5,12 @@
   --color-sage: #B4C4B5;
   --color-rose: #D9A0A0;
   --color-petrol: #005F73;
+  /* This is the magic line that creates the font-cursive class! */
+  --font-vibes: "Great Vibes", cursive; 
 }
 
 @layer components {
+  /* Master Glass Box Utility */
   .light-glass-box {
     background: rgba(255, 255, 255, 0.45);
     backdrop-filter: blur(12px);
@@ -18,15 +21,15 @@
   }
 }
 
+/* Base Constraints */
 body {
-  @apply bg-alabaster text-slate-800 antialiased overflow-hidden m-0 p-0;
+  @apply bg-alabaster text-slate-800 antialiased overflow-x-hidden m-0 p-0;
 }
 
 h1, h2, h3, h4, h5, h6 {
   @apply text-petrol font-serif;
 }
 
-/* Ensure the root div can actually take up the full screen */
 #root {
   width: 100vw;
   height: 100vh;
