@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Layout from './components/Layout'; 
 import borderScrollImage from './assets/images/Borderscroll.png';
-import { Calendar, MapPin, Volume2, VolumeX } from 'lucide-react';
+import { Calendar, MapPin, Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
 // Import Door Assets
 import doorFrameImg from './assets/images/doorframe.png';
@@ -10,7 +10,6 @@ import doorLeftImg from './assets/images/doorleft.png';
 import doorRightImg from './assets/images/doorright.png';
 import toranImg from './assets/images/toran.png';
 import peacockImg from './assets/images/peacock.png';
-import bgMusic from './assets/music.mp3';
 
 // =========================================
 // COMPONENT: Falling Emojis
@@ -63,57 +62,167 @@ const FallingEmojis = () => {
 };
 
 // =========================================
-// COMPONENT: Floating Audio Player
+// COMPONENT: Global Scroll Indicator (Smart Fade)
 // =========================================
-const FloatingAudioPlayer = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
+const GlobalScrollIndicator = () => {
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const handleScroll = () => {
+      // scrollHeight is much more reliable than offsetHeight for full document length
+      const scrollPosition = Math.ceil(window.innerHeight + window.scrollY);
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Hide if within 150px of the absolute bottom
+      if (documentHeight - scrollPosition < 150) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+    };
 
-    // Set volume a bit lower so it's pleasant background noise
-    audio.volume = 0.4;
+    // Listen for scrolling natively
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Slight delay on initial check to ensure the page has fully painted/rendered first
+    setTimeout(handleScroll, 100);
 
-    const playAudio = () => {
-      audio.play().then(() => {
-        setIsPlaying(true);
-        // Once it successfully plays, remove these invisible click listeners
-        document.removeEventListener('click', playAudio);
-        document.removeEventListener('touchstart', playAudio);
-      }).catch(() => {
-        // Browser blocked autoplay; it will wait for the next click
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <motion.div
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 0.3 }}
+      // z-[9999] guarantees it beats EVERYTHING.
+      // Removed mix-blend-mode and added a strong text-shadow instead
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center justify-center pointer-events-none text-white drop-shadow-[0_3px_8px_rgba(0,0,0,1)]"
+    >
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        className="flex flex-col items-center"
+      >
+        <span className="text-[10px] uppercase tracking-[0.3em] font-sans mb-2 font-semibold">
+          Scroll
+        </span>
+        <ChevronDown size={24} strokeWidth={2} />
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// =========================================
+// COMPONENT: YouTube Background Audio Player
+// =========================================
+const YouTubeAudioPlayer = ({ videoId = "YOUR_YOUTUBE_VIDEO_ID_HERE" }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playerRef = useRef(null);
+  const wasPlayingRef = useRef(false);
+
+  useEffect(() => {
+    // Load the YouTube IFrame API code asynchronously
+    if (!document.getElementById('youtube-iframe-script')) {
+      const tag = document.createElement('script');
+      tag.id = 'youtube-iframe-script';
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    // Initialize the player once the API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      playerRef.current = new window.YT.Player('youtube-audio-player', {
+        height: '0',
+        width: '0',
+        videoId: videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(40); // Set baseline volume
+          },
+          onStateChange: (event) => {
+            setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
+          }
+        }
       });
     };
 
-    // Attempt to play immediately
-    playAudio();
+    return () => {
+      if (playerRef.current && playerRef.current.destroy) {
+        playerRef.current.destroy();
+      }
+    };
+  }, [videoId]);
 
-    // If blocked, wait for the user's first click anywhere on the page
-    document.addEventListener('click', playAudio);
-    document.addEventListener('touchstart', playAudio);
+  // Handle Tab Focus (Pause when away, resume when back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!playerRef.current || !playerRef.current.getPlayerState) return;
+      
+      if (document.hidden) {
+        // If tab is hidden and music is playing, pause it and remember its state
+        if (playerRef.current.getPlayerState() === window.YT.PlayerState.PLAYING) {
+          wasPlayingRef.current = true;
+          playerRef.current.pauseVideo();
+        }
+      } else {
+        // If tab is visible again and music was playing before, resume
+        if (wasPlayingRef.current) {
+          playerRef.current.playVideo();
+          wasPlayingRef.current = false;
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Global click listener to initiate first playback (bypassing autoplay blocks)
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      if (playerRef.current && playerRef.current.getPlayerState) {
+        const state = playerRef.current.getPlayerState();
+        if (state !== window.YT.PlayerState.PLAYING) {
+          playerRef.current.playVideo();
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+      }
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
 
     return () => {
-      document.removeEventListener('click', playAudio);
-      document.removeEventListener('touchstart', playAudio);
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
     };
   }, []);
 
   const togglePlay = (e) => {
-    e.stopPropagation(); // Prevents this click from triggering other page elements
+    e.stopPropagation(); // Prevent triggering the global click listener
+    if (!playerRef.current || !playerRef.current.getPlayerState) return;
+
     if (isPlaying) {
-      audioRef.current.pause();
+      playerRef.current.pauseVideo();
     } else {
-      audioRef.current.play();
+      playerRef.current.playVideo();
     }
-    setIsPlaying(!isPlaying);
   };
 
   return (
     <>
-      {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={bgMusic} loop />
+      {/* Invisible YouTube Player */}
+      <div id="youtube-audio-player" className="absolute opacity-0 pointer-events-none w-0 h-0" />
 
       {/* Floating Mute/Unmute Button - Bottom Left */}
       <button
@@ -166,8 +275,8 @@ const DoorRevealSection = () => {
           <h3 className="text-2xl md:text-3xl font-serif text-petrol mb-6 tracking-widest font-semibold uppercase">
             Gol Dhana & Engagement
           </h3>
-          <p className="text-xs md:text-sm font-sans uppercase tracking-[0.3em] text-petrol opacity-70 mb-10">
-            celebrating the union of
+          <p className="text-s md:text-sm font-sans uppercase tracking-[0.3em] text-petrol opacity-70 mb-10">
+            celebration of
           </p>
           <h2 className="text-5xl sm:text-6xl md:text-8xl font-vibes-custom text-petrol flex flex-row flex-nowrap items-center justify-center gap-3 md:gap-4 w-full leading-none whitespace-nowrap">
             <span>Rohan</span>
@@ -234,7 +343,9 @@ export default function App() {
     <Layout>
       
       {/* BACKGROUND MUSIC PLAYER */}
-      <FloatingAudioPlayer />
+      <YouTubeAudioPlayer videoId="nyFWUlsbAVA" />
+
+      <GlobalScrollIndicator />
 
       {/* 1. HERO SECTION */}
       <section className="relative z-40 w-full h-[100dvh] overflow-hidden flex flex-col items-center justify-center bg-black">
@@ -265,7 +376,7 @@ export default function App() {
               <div className="h-[1px] flex-grow bg-white"></div>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-vibes-custom text-white drop-shadow-sm flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-4 w-full leading-none whitespace-nowrap">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-vibes-custom !text-white drop-shadow-sm flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-4 w-full leading-none whitespace-nowrap">
               <span>Rohan</span>
               <span className="text-3xl md:text-4xl font-vibes-custom opacity-70 font-light">&</span>
               <span>Manasi</span>
@@ -303,16 +414,16 @@ export default function App() {
         <section className="relative z-20 w-full flex flex-col items-center justify-start px-12 pt-24 md:px-24 pb-4">
           
           <div className="flex flex-col items-center justify-center w-full max-w-md text-center">
-            <div className="text-petrol font-serif text-xl md:text-2xl mb-8 tracking-widest opacity-90">
-              || ॐ श्री पार्श्वनाथाय नमः ||
+            <div className="text-petrol font-serif text-l md:text-2xl mb-8 tracking-widest opacity-90">
+              || ॐ ह्रीं श्री शंखेश्वर पार्श्वनाथाय नमः ||
             </div>
-            <p className="text-sm md:text-base text-petrol font-serif italic mb-10 opacity-80">
+            <p className="text-l md:text-base text-petrol font-serif italic mb-10 opacity-80">
               With the blessings of our elders,
             </p>
             <h2 className="text-2xl md:text-3xl font-serif text-petrol mb-6 font-semibold">
               Mrs. Tanuja Rajesh Shah
             </h2>
-            <p className="text-sm md:text-base text-petrol font-serif italic mb-10 opacity-80">
+            <p className="text-l md:text-base text-petrol font-serif italic mb-10 opacity-80">
               cordially invites you to the
             </p>
           </div>
@@ -374,16 +485,6 @@ export default function App() {
               10:00 AM onwards
             </p>
 
-            {/* ADD TO CALENDAR BUTTON */}
-            <a 
-              href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Rohan+%26+Manasi+Engagement&dates=20260621T043000Z/20260621T103000Z&details=Join+us+for+the+Gol+Dhana+%26+Engagement+ceremony&location=Marigold+Banquets+and+Conventions"
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-2.5 mb-12 border border-petrol/30 rounded-full text-petrol text-xs uppercase tracking-[0.15em] hover:bg-petrol hover:text-white transition-colors"
-            >
-              <Calendar size={16} />
-              Add to Calendar
-            </a>
 
             {/* THE LOCATION */}
             <p className="text-xs md:text-sm font-sans text-petrol uppercase tracking-[0.2em] opacity-80 mb-6">
@@ -410,7 +511,6 @@ export default function App() {
             
           </div>
         </section>
-
       </div>
     </Layout>
   );
