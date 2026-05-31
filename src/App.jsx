@@ -69,11 +69,9 @@ const GlobalScrollIndicator = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // scrollHeight is much more reliable than offsetHeight for full document length
       const scrollPosition = Math.ceil(window.innerHeight + window.scrollY);
       const documentHeight = document.documentElement.scrollHeight;
       
-      // Hide if within 150px of the absolute bottom
       if (documentHeight - scrollPosition < 150) {
         setIsVisible(false);
       } else {
@@ -81,10 +79,7 @@ const GlobalScrollIndicator = () => {
       }
     };
 
-    // Listen for scrolling natively
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Slight delay on initial check to ensure the page has fully painted/rendered first
     setTimeout(handleScroll, 100);
 
     return () => window.removeEventListener('scroll', handleScroll);
@@ -94,9 +89,8 @@ const GlobalScrollIndicator = () => {
     <motion.div
       animate={{ opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3 }}
-      // z-[9999] guarantees it beats EVERYTHING.
-      // Removed mix-blend-mode and added a strong text-shadow instead
-      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center justify-center pointer-events-none text-white drop-shadow-[0_3px_8px_rgba(0,0,0,1)]"
+      // Restored mix-blend-difference and removed the heavy drop shadow
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center justify-center pointer-events-none mix-blend-difference text-white"
     >
       <motion.div
         animate={{ y: [0, 10, 0] }}
@@ -364,7 +358,7 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="hero-glass-box px-8 py-10 flex flex-col items-center justify-center w-full max-w-md pointer-events-auto"
+            className="bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 rounded-2xl px-8 py-10 flex flex-col items-center justify-center w-full max-w-md pointer-events-auto"
           >
             <span className="text-xs md:text-sm uppercase tracking-[0.3em] font-sans text-white mb-4 text-center">
               We Are Getting Engaged
